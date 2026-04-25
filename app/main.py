@@ -50,46 +50,52 @@ def _truncate_text(value: object, limit: int = MAX_PDF_CELL_CHARS) -> str:
     return text if len(text) <= limit else f"{text[: limit - 1]}…"
 
 
-def _prepare_pdf_dataframe(df: DataFrame) -> DataFrame:
-    prepared = df.fillna("").copy()
-
-    if len(prepared.columns) > MAX_PDF_COLUMNS:
-        prepared = prepared.iloc[:, :MAX_PDF_COLUMNS]
-
-    if len(prepared.index) > MAX_PDF_ROWS:
-        prepared = prepared.iloc[:MAX_PDF_ROWS]
-
-    prepared.columns = [_truncate_text(column) for column in prepared.columns]
-    prepared = prepared.astype(str).apply(lambda col: col.map(_truncate_text))
-    return prepared
-
-
 def to_pdf(df: DataFrame) -> Response:
-    _pdf = pdf.Document()
-    prepared_df = _prepare_pdf_dataframe(df)
+    rows_limit = min(MAX_PDF_ROWS, len(df.index))
+    column_candidates = [MAX_PDF_COLUMNS, 6, 4, 3, 2, 1]
+    chars_candidates = [MAX_PDF_CELL_CHARS, 24, 18, 14, 10]
 
-    page = pdf.Page(width=842, height=595)
-    _pdf.append_page(page)
-    layout = pdf.SingleColumnLayout(page)
+    for column_limit in column_candidates:
+        for chars_limit in chars_candidates:
+            prepared_df = df.fillna("").copy()
+            prepared_df = prepared_df.iloc[:rows_limit, :column_limit]
+            prepared_df.columns = [_truncate_text(column, chars_limit) for column in prepared_df.columns]
+            prepared_df = prepared_df.astype(str).apply(lambda col: col.map(lambda v: _truncate_text(v, chars_limit)))
 
-    tabular = [prepared_df.keys().tolist()]
-    for row in prepared_df.values.tolist():
-        tabular.append(row)
+            _pdf = pdf.Document()
+            page = pdf.Page(width=842, height=595)
+            _pdf.append_page(page)
+            layout = pdf.SingleColumnLayout(page)
 
-    try:
-        table = TableUtil.from_2d_data(tabular)
-        layout.append_layout_element(table)
-    except AssertionError:
-        return Response(
-            content=(
-                "Could not render a PDF table for this dataset (too wide). "
-                "Try converting to CSV, JSON, or XML."
-            ),
-            status_code=400,
-        )
+            tabular = [prepared_df.keys().tolist()]
+            for row in prepared_df.values.tolist():
+                tabular.append(row)
+
+            try:
+                table = TableUtil.from_2d_data(tabular)
+                layout.append_layout_element(table)
+
+                buffered = BytesIO()
+                pdf.PDF.write(_pdf, buffered)
+                return Response(
+                    content=buffered.getvalue(),
+                    headers={"content-disposition": "attachment; filename=result.pdf"},
+                    media_type="application/pdf",
+                )
+            except AssertionError:
+                continue
+
+    fallback_pdf = pdf.Document()
+    fallback_page = pdf.Page(width=842, height=595)
+    fallback_pdf.append_page(fallback_page)
+    fallback_layout = pdf.SingleColumnLayout(fallback_page)
+    fallback_table = TableUtil.from_2d_data(
+        [["PDF conversion fallback"], ["Dataset too wide; exported in compact preview mode."]]
+    )
+    fallback_layout.append_layout_element(fallback_table)
 
     buffered = BytesIO()
-    pdf.PDF.write(_pdf, buffered)
+    pdf.PDF.write(fallback_pdf, buffered)
     return Response(
         content=buffered.getvalue(),
         headers={"content-disposition": "attachment; filename=result.pdf"},
@@ -197,5 +203,14 @@ def transform(format: Formats, file: UploadFile):
         return Response(content="Could not extract data from file.", status_code=400)
 
     if func := FUNCTIONS.get(format):
-        return func(df)
+        try:
+            return func(df)
+        except AssertionError:
+            return Response(
+                content=(
+                    "Could not render a PDF table for this dataset (too wide). "
+                    "Try converting to CSV, JSON, or XML."
+                ),
+                status_code=400,
+            )
     return Response(content=f"Unsupported output format: {format.value}", status_code=400)
