@@ -7,12 +7,20 @@ from borb import pdf
 from borb.pdf.layout_element.table.table_util import TableUtil
 from docx import Document
 from fastapi import FastAPI, Response, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from odf.opendocument import load
 from odf.table import Table, TableCell, TableRow
 from odf.teletype import extractText
 from pandas import DataFrame, concat, read_csv, read_json, read_xml
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class Formats(Enum):
