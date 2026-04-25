@@ -40,22 +40,54 @@ class ValidExtensions(Enum):
     ODT = "odt"
 
 
+MAX_PDF_COLUMNS = 8
+MAX_PDF_ROWS = 250
+MAX_PDF_CELL_CHARS = 32
+
+
+def _truncate_text(value: object, limit: int = MAX_PDF_CELL_CHARS) -> str:
+    text = "" if value is None else str(value)
+    return text if len(text) <= limit else f"{text[: limit - 1]}…"
+
+
+def _prepare_pdf_dataframe(df: DataFrame) -> DataFrame:
+    prepared = df.fillna("").copy()
+
+    if len(prepared.columns) > MAX_PDF_COLUMNS:
+        prepared = prepared.iloc[:, :MAX_PDF_COLUMNS]
+
+    if len(prepared.index) > MAX_PDF_ROWS:
+        prepared = prepared.iloc[:MAX_PDF_ROWS]
+
+    prepared.columns = [_truncate_text(column) for column in prepared.columns]
+    prepared = prepared.astype(str).apply(lambda col: col.map(_truncate_text))
+    return prepared
+
+
 def to_pdf(df: DataFrame) -> Response:
     _pdf = pdf.Document()
+    prepared_df = _prepare_pdf_dataframe(df)
 
-    page = pdf.Page()
+    page = pdf.Page(width=842, height=595)
     _pdf.append_page(page)
-
     layout = pdf.SingleColumnLayout(page)
 
-    tabular = []
-    tabular.append(df.keys().tolist())
-    for row in df.values.tolist():
+    tabular = [prepared_df.keys().tolist()]
+    for row in prepared_df.values.tolist():
         tabular.append(row)
 
-    table = TableUtil.from_2d_data(tabular)
+    try:
+        table = TableUtil.from_2d_data(tabular)
+        layout.append_layout_element(table)
+    except AssertionError:
+        return Response(
+            content=(
+                "Could not render a PDF table for this dataset (too wide). "
+                "Try converting to CSV, JSON, or XML."
+            ),
+            status_code=400,
+        )
 
-    layout.append_layout_element(table)
     buffered = BytesIO()
     pdf.PDF.write(_pdf, buffered)
     return Response(
