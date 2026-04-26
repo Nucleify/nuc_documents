@@ -1,0 +1,8 @@
+{
+  "name": "nuc_documents",
+  "description": "Module that contains convert document functions.",
+  "version": "0.0.1",
+  "category": "core",
+  "installed": true,
+  "enabled": true
+}
