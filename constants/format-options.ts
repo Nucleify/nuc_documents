@@ -1,4 +1,4 @@
-import type { FormatOption } from '../types'
+import type { FormatOption } from 'nucleify'
 
 import { FORMATS } from './formats'
 

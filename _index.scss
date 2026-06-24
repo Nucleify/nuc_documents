@@ -38,7 +38,8 @@
     .p-fileupload {
       width: 100%;
 
-      > span {
+      // PrimeVue: hide helper span; PrimeReact basic mode uses span.p-button for choose
+      > span:not(.p-button) {
         display: none;
       }
     }
@@ -97,7 +98,7 @@
     margin: 0;
     padding: 0.75rem 0.9rem;
     border-radius: 0.5rem;
-    background: rgba($primary-color, 0.12);
+    background: nuc-primary-rgba(0.12);
   }
 
   @media (max-width: 640px) {

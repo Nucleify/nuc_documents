@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
 
-import type { FileSelectEvent } from '../types'
+import type { FileSelectEvent } from 'nucleify'
 
 export function onFileSelect(
   event: FileSelectEvent,

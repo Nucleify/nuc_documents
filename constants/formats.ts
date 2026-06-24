@@ -1,3 +1,3 @@
-import type { OutputFormat } from '../types'
+import type { OutputFormat } from 'nucleify'
 
 export const FORMATS: OutputFormat[] = ['csv', 'xml', 'json']

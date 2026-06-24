@@ -93,13 +93,13 @@ import {
   formatBytes,
   normalizeBaseUrl,
   onFileSelect as onFileSelectAction,
-} from './utils'
+} from 'nucleify'
 import {
   ACCEPTED_EXTENSIONS,
   DEFAULT_OUTPUT_FORMAT,
   FORMAT_OPTIONS,
-} from './constants'
-import type { FileSelectEvent, OutputFormat } from './types'
+} from 'nucleify'
+import type { FileSelectEvent, OutputFormat } from 'nucleify'
 
 const selectedFile = ref<File | null>(null)
 const selectedFormat = ref<OutputFormat>(DEFAULT_OUTPUT_FORMAT)

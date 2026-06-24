@@ -1,6 +1,5 @@
-import type { ConvertFileParams } from '../types'
-
-import { getDownloadName } from './get-download-name'
+import type { ConvertFileParams } from 'nucleify'
+import { getDownloadName } from 'nucleify'
 
 export async function convertFile({
   selectedFile,
