@@ -108,7 +108,7 @@ export function NucDocuments(): JSX.Element {
             2. Choose output format
           </label>
           <AdSelect
-            adType="main"
+            nuiType="main"
             inputId="convert-format"
             value={selectedFormat}
             options={FORMAT_OPTIONS}
@@ -124,7 +124,7 @@ export function NucDocuments(): JSX.Element {
 
         <div className="convert-data-actions">
           <AdButton
-            adType="main"
+            nuiType="main"
             disabled={isLoading || !selectedFile}
             label={isLoading ? 'Converting...' : 'Convert file'}
             className="convert-data-convert-btn"

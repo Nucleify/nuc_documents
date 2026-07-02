@@ -17,7 +17,7 @@
           <span class="convert-data-block-title">1. Upload document</span>
           <div class="convert-data-upload-row">
             <ad-file-upload
-              ad-type="main"
+              nui-type="main"
               mode="basic"
               name="file"
               choose-label="Select file"
@@ -45,7 +45,7 @@
             2. Choose output format
           </label>
           <ad-select
-            ad-type="main"
+            nui-type="main"
             id="convert-format"
             v-model="selectedFormat"
             :options="FORMAT_OPTIONS"
@@ -58,7 +58,7 @@
 
         <div class="convert-data-actions">
           <ad-button
-            ad-type="main"
+            nui-type="main"
             :disabled="isLoading || !selectedFile"
             :label="isLoading ? 'Converting...' : 'Convert file'"
             class="convert-data-convert-btn"
